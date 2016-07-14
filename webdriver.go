@@ -437,8 +437,15 @@ func (s Session) FocusParentFrame() error {
 }
 
 //Change focus to another window. The window to change focus to may be specified by its server assigned window handle, or by the value of its name attribute.
-func (s Session) FocusOnWindow(name string) error {
+func (s Session) FocusOnWindowo(name string) error {
 	p := params{"name": name}
+	_, _, err := s.wd.do(p, "POST", "/session/%s/window", s.Id)
+	return err
+}
+
+
+func (s Session) FocusOnWindow(name WindowHandle) error {
+	p := params{"name": name.Id}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/window", s.Id)
 	return err
 }
