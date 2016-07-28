@@ -580,7 +580,7 @@ func (s Session) FindElements(using FindElementStrategy, value string) ([]WebEle
 	}
 	elements := make([]WebElement, len(v))
 	for i, elem := range v {
-		elements[i] = &WebElement{&s, elem.ELEMENT}
+		elements[i] = WebElement{&s, elem.ELEMENT}
 	}
 	return elements, err
 }
