@@ -555,7 +555,7 @@ func (s Session) WebElementFromId(id string) WebElement {
 }
 
 //Search for an element on the page, starting from the document root.
-func (s Session) FindElement(using FindElementStrategy, value string) (WebElement, error) {
+func (s Session) FindElement(using FindElementStrategy, value string) (*WebElement, error) {
 	p := params{"using": using, "value": value}
 	_, data, err := s.wd.do(p, "POST", "/session/%s/element", s.Id)
 	if err != nil {
