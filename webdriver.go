@@ -580,7 +580,7 @@ func (s Session) FindElements(using FindElementStrategy, value string) ([]WebEle
 	}
 	elements := make([]WebElement, len(v))
 	for i, elem := range v {
-		elements[i] = WebElement{&s, elem.ELEMENT}
+		elements[i] = &WebElement{&s, elem.ELEMENT}
 	}
 	return elements, err
 }
@@ -610,6 +610,9 @@ func (e WebElement) FindElement(using FindElementStrategy, value string) (*WebEl
 	}
 	var elem element
 	err = json.Unmarshal(data, &elem)
+	if err != nil {
+		return nil, err
+	}
 	return &WebElement{e.s, elem.ELEMENT}, err
 }
 
