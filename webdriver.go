@@ -419,7 +419,7 @@ func (s Session) IMEActivate(engine string) error {
 }
 
 //Change focus to another frame on the page.
-func (s Session) FocusOnFrame(frame WebElement) error {
+func (s Session) FocusOnFrame(frame *WebElement) error {
 	var d interface{}
 	
 	d = params{"ELEMENT":frame.id}
@@ -550,8 +550,8 @@ func (s Session) Title() (string, error) {
 	return title, err
 }
 
-func (s Session) WebElementFromId(id string) WebElement {
-	return WebElement{&s, id}
+func (s Session) WebElementFromId(id string) *WebElement {
+	return &WebElement{&s, id}
 }
 
 //Search for an element on the page, starting from the document root.
@@ -586,14 +586,14 @@ func (s Session) FindElements(using FindElementStrategy, value string) ([]WebEle
 }
 
 //Get the element on the page that currently has focus.
-func (s Session) GetActiveElement() (WebElement, error) {
+func (s Session) GetActiveElement() (*WebElement, error) {
 	_, data, err := s.wd.do(nil, "POST", "/session/%s/element/active", s.Id)
 	if err != nil {
-		return WebElement{}, err
+		return nil, err
 	}
 	var elem element
 	err = json.Unmarshal(data, &elem)
-	return WebElement{&s, elem.ELEMENT}, err
+	return &WebElement{&s, elem.ELEMENT}, err
 }
 
 //Describe the identified element. This command is reserved for future use; its return type is currently undefined.
@@ -606,11 +606,11 @@ func (e WebElement) FindElement(using FindElementStrategy, value string) (WebEle
 	p := params{"using": using, "value": value}
 	_, data, err := e.s.wd.do(p, "POST", "/session/%s/element/%s/element", e.s.Id, e.id)
 	if err != nil {
-		return WebElement{}, err
+		return nil, err
 	}
 	var elem element
 	err = json.Unmarshal(data, &elem)
-	return WebElement{e.s, elem.ELEMENT}, err
+	return &WebElement{e.s, elem.ELEMENT}, err
 }
 
 //Search for multiple elements on the page, starting from the identified element.
@@ -633,19 +633,19 @@ func (e WebElement) FindElements(using FindElementStrategy, value string) ([]Web
 }
 
 //Click on an element.
-func (e WebElement) Click() error {
+func (e *WebElement) Click() error {
 	_, _, err := e.s.wd.do(nil, "POST", "/session/%s/element/%s/click", e.s.Id, e.id)
 	return err
 }
 
 //Submit a FORM element.
-func (e WebElement) Submit() error {
+func (e *WebElement) Submit() error {
 	_, _, err := e.s.wd.do(nil, "POST", "/session/%s/element/%s/submit", e.s.Id, e.id)
 	return err
 }
 
 //Returns the visible text for the element.
-func (e WebElement) Text() (string, error) {
+func (e *WebElement) Text() (string, error) {
 	_, data, err := e.s.wd.do(nil, "GET", "/session/%s/element/%s/text", e.s.Id, e.id)
 	if err != nil {
 		return "", err
@@ -656,7 +656,7 @@ func (e WebElement) Text() (string, error) {
 }
 
 //Send a sequence of key strokes to an element.
-func (e WebElement) SendKeys(sequence string) error {
+func (e *WebElement) SendKeys(sequence string) error {
 	keys := make([]string, len(sequence))
 	for i, k := range sequence {
 		keys[i] = string(k)
@@ -678,7 +678,7 @@ func (s Session) SendKeysOnActiveElement(sequence string) error {
 }
 
 //Query for an element's tag name.
-func (e WebElement) Name() (string, error) {
+func (e *WebElement) Name() (string, error) {
 	_, data, err := e.s.wd.do(nil, "GET", "/session/%s/element/%s/name", e.s.Id, e.id)
 	if err != nil {
 		return "", err
@@ -689,13 +689,13 @@ func (e WebElement) Name() (string, error) {
 }
 
 //Clear a TEXTAREA or text INPUT element's value.
-func (e WebElement) Clear() error {
+func (e *WebElement) Clear() error {
 	_, _, err := e.s.wd.do(nil, "POST", "/session/%s/element/%s/clear", e.s.Id, e.id)
 	return err
 }
 
 //Determine if an OPTION element, or an INPUT element of type checkbox or radiobutton is currently selected.
-func (e WebElement) IsSelected() (bool, error) {
+func (e *WebElement) IsSelected() (bool, error) {
 	_, data, err := e.s.wd.do(nil, "GET", "/session/%s/element/%s/value", e.s.Id, e.id)
 	if err != nil {
 		return false, err
@@ -706,7 +706,7 @@ func (e WebElement) IsSelected() (bool, error) {
 }
 
 //Determine if an element is currently enabled.
-func (e WebElement) IsEnabled() (bool, error) {
+func (e *WebElement) IsEnabled() (bool, error) {
 	_, data, err := e.s.wd.do(nil, "GET", "/session/%s/element/%s/enabled", e.s.Id, e.id)
 	if err != nil {
 		return false, err
@@ -717,7 +717,7 @@ func (e WebElement) IsEnabled() (bool, error) {
 }
 
 //Get the value of an element's attribute.
-func (e WebElement) GetAttribute(name string) (string, error) {
+func (e *WebElement) GetAttribute(name string) (string, error) {
 	_, data, err := e.s.wd.do(nil, "GET", "/session/%s/element/%s/attribute/%s", e.s.Id, e.id, name)
 	if err != nil {
 		return "", err
@@ -729,7 +729,7 @@ func (e WebElement) GetAttribute(name string) (string, error) {
 }
 
 //Test if two element IDs refer to the same DOM element.
-func (e WebElement) Equal(element WebElement) (bool, error) {
+func (e *WebElement) Equal(element WebElement) (bool, error) {
 	_, data, err := e.s.wd.do(nil, "GET", "/session/%s/element/%s/equal/%s", e.s.Id, e.id, element.id)
 	if err != nil {
 		return false, err
@@ -740,7 +740,7 @@ func (e WebElement) Equal(element WebElement) (bool, error) {
 }
 
 //Determine if an element is currently displayed.
-func (e WebElement) IsDisplayed() (bool, error) {
+func (e *WebElement) IsDisplayed() (bool, error) {
 	_, data, err := e.s.wd.do(nil, "GET", "/session/%s/element/%s/displayed", e.s.Id, e.id)
 	if err != nil {
 		return false, err
@@ -752,7 +752,7 @@ func (e WebElement) IsDisplayed() (bool, error) {
 
 //Determine an element's location on the page.
 //The point (0, 0) refers to the upper-left corner of the page. The element's coordinates are returned as a JSON object with x and y properties.
-func (e WebElement) GetLocation() (Position, error) {
+func (e *WebElement) GetLocation() (Position, error) {
 	_, data, err := e.s.wd.do(nil, "GET", "/session/%s/element/%s/location", e.s.Id, e.id)
 	if err != nil {
 		return Position{}, err
@@ -765,7 +765,7 @@ func (e WebElement) GetLocation() (Position, error) {
 //Determine an element's location on the screen once it has been scrolled into view.
 //
 //Note: This is considered an internal command and should only be used to determine an element's location for correctly generating native events.
-func (e WebElement) GetLocationInView() (Position, error) {
+func (e *WebElement) GetLocationInView() (Position, error) {
 	_, data, err := e.s.wd.do(nil, "GET", "/session/%s/element/%s/location_in_view", e.s.Id, e.id)
 	if err != nil {
 		return Position{}, err
@@ -776,7 +776,7 @@ func (e WebElement) GetLocationInView() (Position, error) {
 }
 
 //Determine an element's size in pixels.
-func (e WebElement) Size() (Size, error) {
+func (e *WebElement) Size() (Size, error) {
 	_, data, err := e.s.wd.do(nil, "GET", "/session/%s/element/%s/size", e.s.Id, e.id)
 	if err != nil {
 		return Size{}, err
@@ -787,7 +787,7 @@ func (e WebElement) Size() (Size, error) {
 }
 
 //Query the value of an element's computed CSS property.
-func (e WebElement) GetCssProperty(name string) (string, error) {
+func (e *WebElement) GetCssProperty(name string) (string, error) {
 	_, data, err := e.s.wd.do(nil, "GET", "/session/%s/element/%s/css/%s", e.s.Id, e.id, name)
 	if err != nil {
 		return "", err
@@ -855,7 +855,7 @@ func (s Session) DismissAlert() error {
 
 //Move the mouse by an offset of the specificed element.
 //If no element is specified, the move is relative to the current mouse cursor. If an element is provided but no offset, the mouse will be moved to the center of the element. If the element is not visible, it will be scrolled into view.
-func (s Session) MoveTo(element WebElement, xoffset, yoffset int) error {
+func (s Session) MoveTo(element *WebElement, xoffset, yoffset int) error {
 	p := params{"element": element.id, "xoffset": xoffset, "yoffset": yoffset}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/moveto", s.Id)
 	return err
@@ -899,7 +899,7 @@ func (s Session) DoubleClick() error {
 }
 
 //Single tap on the touch enabled device.
-func (s Session) TouchClick(element WebElement) error {
+func (s Session) TouchClick(element *WebElement) error {
 	p := params{"element": element.id}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/click", s.Id)
 	return err
@@ -927,21 +927,21 @@ func (s Session) TouchMove(x, y int) error {
 }
 
 //Scroll on the touch screen using finger based motion events.
-func (s Session) TouchScroll(element WebElement, xoffset, yoffset int) error {
+func (s Session) TouchScroll(element *WebElement, xoffset, yoffset int) error {
 	p := params{"element": element.id, "xoffset": xoffset, "yoffset": yoffset}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/scroll", s.Id)
 	return err
 }
 
 //Double tap on the touch screen using finger motion events.
-func (s Session) TouchDoubleClick(element WebElement) error {
+func (s Session) TouchDoubleClick(element *WebElement) error {
 	p := params{"element": element.id}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/doubleclick", s.Id)
 	return err
 }
 
 //Long press on the touch screen using finger motion events.
-func (s Session) TouchLongClick(element WebElement) error {
+func (s Session) TouchLongClick(element *WebElement) error {
 	p := params{"element": element.id}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/longclick", s.Id)
 	return err
@@ -949,7 +949,7 @@ func (s Session) TouchLongClick(element WebElement) error {
 
 //Flick on the touch screen using finger motion events.
 //This flickcommand starts at a particulat screen location.
-func (s Session) TouchFlick(element WebElement, xoffset, yoffset, speed int) error {
+func (s Session) TouchFlick(element *WebElement, xoffset, yoffset, speed int) error {
 	p := params{"element": element.id, "xoffset": xoffset, "yoffset": yoffset, "speed": speed}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/flick", s.Id)
 	return err
