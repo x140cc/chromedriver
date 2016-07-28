@@ -559,7 +559,7 @@ func (s Session) FindElement(using FindElementStrategy, value string) (WebElemen
 	p := params{"using": using, "value": value}
 	_, data, err := s.wd.do(p, "POST", "/session/%s/element", s.Id)
 	if err != nil {
-		return WebElement{}, err
+		return nil, err
 	}
 	var elem element
 	err = json.Unmarshal(data, &elem)
