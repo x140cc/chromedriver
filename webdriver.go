@@ -602,7 +602,7 @@ func (s Session) GetActiveElement() (*WebElement, error) {
 }*/
 
 //Search for an element on the page, starting from the identified element.
-func (e WebElement) FindElement(using FindElementStrategy, value string) (WebElement, error) {
+func (e WebElement) FindElement(using FindElementStrategy, value string) (*WebElement, error) {
 	p := params{"using": using, "value": value}
 	_, data, err := e.s.wd.do(p, "POST", "/session/%s/element/%s/element", e.s.Id, e.id)
 	if err != nil {
