@@ -563,7 +563,7 @@ func (s Session) FindElement(using FindElementStrategy, value string) (*WebEleme
 	}
 	var elem element
 	err = json.Unmarshal(data, &elem)
-	return WebElement{&s, elem.ELEMENT}, err
+	return &WebElement{&s, elem.ELEMENT}, err
 }
 
 //Search for multiple elements on the page, starting from the document root.
