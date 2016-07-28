@@ -563,7 +563,10 @@ func (s Session) FindElement(using FindElementStrategy, value string) (*WebEleme
 	}
 	var elem element
 	err = json.Unmarshal(data, &elem)
-	return &WebElement{&s, elem.ELEMENT}, err
+		if err != nil {
+		return nil, err
+	}
+	return &WebElement{&s, elem.ELEMENT}, nil
 }
 
 //Search for multiple elements on the page, starting from the document root.
@@ -601,39 +604,8 @@ func (s Session) GetActiveElement() (*WebElement, error) {
 	// GET /session/:sessionId/element/:id
 }*/
 
-//Search for an element on the page, starting from the identified element.
-func (e WebElement) FindElement(using FindElementStrategy, value string) (*WebElement, error) {
-	p := params{"using": using, "value": value}
-	_, data, err := e.s.wd.do(p, "POST", "/session/%s/element/%s/element", e.s.Id, e.id)
-	if err != nil {
-		return nil, err
-	}
-	var elem element
-	err = json.Unmarshal(data, &elem)
-	if err != nil {
-		return nil, err
-	}
-	return &WebElement{e.s, elem.ELEMENT}, err
-}
 
-//Search for multiple elements on the page, starting from the identified element.
-func (e WebElement) FindElements(using FindElementStrategy, value string) ([]WebElement, error) {
-	p := params{"using": using, "value": value}
-	_, data, err := e.s.wd.do(p, "POST", "/session/%s/element/%s/elements", e.s.Id, e.id)
-	if err != nil {
-		return nil, err
-	}
-	var v []element
-	err = json.Unmarshal(data, &v)
-	if err != nil {
-		return nil, err
-	}
-	elements := make([]WebElement, len(v))
-	for i, z := range v {
-		elements[i] = WebElement{e.s, z.ELEMENT}
-	}
-	return elements, err
-}
+
 
 //Click on an element.
 func (e *WebElement) Click() error {
