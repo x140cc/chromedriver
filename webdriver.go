@@ -219,27 +219,27 @@ const (
 ////////////////////////////////////////////////////////////////////////////////
 
 //Retrieve the capabilities of the specified session.
-func (s Session) GetCapabilities() Capabilities {
+func (s *Session) GetCapabilities() Capabilities {
 	// GET /session/:sessionId
 	// I have the capabilities stored in Session already
 	return s.Capabilities
 }
 
 //Delete the session.
-func (s Session) Delete() error {
+func (s *Session) Delete() error {
 	_, _, err := s.wd.do(nil, "DELETE", "/session/%s", s.Id)
 	return err
 }
 
 //Configure the amount of time that a particular type of operation can execute for before they are aborted and a |Timeout| error is returned to the client.  Valid values are: "script" for script timeouts, "implicit" for modifying the implicit wait timeout and "page load" for setting a page load timeout.
-func (s Session) SetTimeouts(typ string, ms int) error {
+func (s *Session) SetTimeouts(typ string, ms int) error {
 	p := params{"type": typ, "ms": ms}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/timeouts", s.Id)
 	return err
 }
 
 //Set the amount of time, in milliseconds, that asynchronous scripts executed by ExecuteScriptAsync() are permitted to run before they are aborted and a |Timeout| error is returned to the client.
-func (s Session) SetTimeoutsAsyncScript(ms int) error {
+func (s *Session) SetTimeoutsAsyncScript(ms int) error {
 	p := params{"ms": ms}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/timeouts/async_script", s.Id)
 	return err
@@ -247,29 +247,29 @@ func (s Session) SetTimeoutsAsyncScript(ms int) error {
 
 //Set the amount of time the driver should wait when searching for elements. When searching for a single element, the driver should poll the page until an element is found or the timeout expires, whichever occurs first. When searching for multiple elements, the driver should poll the page until at least one element is found or the timeout expires, at which point it should return an empty list.
 //If this command is never sent, the driver should default to an implicit wait of 0ms.
-func (s Session) SetTimeoutsImplicitWait(ms int) error {
+func (s *Session) SetTimeoutsImplicitWait(ms int) error {
 	p := params{"ms": ms}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/timeouts/implicit_wait", s.Id)
 	return err
 }
 
-func (s Session) GetCurrentWindowHandle() WindowHandle {
-	return WindowHandle{&s, "current"}
+func (s *Session) GetCurrentWindowHandle() WindowHandle {
+	return WindowHandle{s, "current"}
 }
 
 //Retrieve the current window handle.
-func (s Session) WindowHandle() (WindowHandle, error) {
+func (s *Session) WindowHandle() (WindowHandle, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/window_handle", s.Id)
 	if err != nil {
 		return WindowHandle{}, err
 	}
 	var handle string
 	err = json.Unmarshal(data, &handle)
-	return WindowHandle{&s, handle}, err
+	return WindowHandle{s, handle}, err
 }
 
 //Retrieve the list of all window handles available to the session.
-func (s Session) WindowHandles() ([]WindowHandle, error) {
+func (s *Session) WindowHandles() ([]WindowHandle, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/window_handles", s.Id)
 	if err != nil {
 		return nil, err
@@ -281,13 +281,13 @@ func (s Session) WindowHandles() ([]WindowHandle, error) {
 	}
 	var handles = make([]WindowHandle, len(hv))
 	for i, h := range hv {
-		handles[i] = WindowHandle{&s, h}
+		handles[i] = WindowHandle{s, h}
 	}
 	return handles, nil
 }
 
 //Retrieve the URL of the current page.
-func (s Session) GetUrl() (string, error) {
+func (s *Session) GetUrl() (string, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/url", s.Id)
 	if err != nil {
 		return "", err
@@ -298,26 +298,26 @@ func (s Session) GetUrl() (string, error) {
 }
 
 //Navigate to a new URL.
-func (s Session) Url(url string) error {
+func (s *Session) Url(url string) error {
 	p := params{"url": url}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/url", s.Id)
 	return err
 }
 
 //Navigate forwards in the browser history, if possible.
-func (s Session) Forward() error {
+func (s *Session) Forward() error {
 	_, _, err := s.wd.do(nil, "POST", "/session/%s/forward", s.Id)
 	return err
 }
 
 //Navigate backwards in the browser history, if possible.
-func (s Session) Back() error {
+func (s *Session) Back() error {
 	_, _, err := s.wd.do(nil, "POST", "/session/%s/back", s.Id)
 	return err
 }
 
 //Refresh the current page.
-func (s Session) Refresh() error {
+func (s *Session) Refresh() error {
 	_, _, err := s.wd.do(nil, "POST", "/session/%s/refresh", s.Id)
 	return err
 }
@@ -325,7 +325,7 @@ func (s Session) Refresh() error {
 // Inject a snippet of JavaScript into the page for execution in the context of the currently selected frame. The executed script is assumed to be synchronous and the result of evaluating the script is returned to the client.
 // The script argument defines the script to execute in the form of a function body. The value returned by that function will be returned to the client. The function will be invoked with the provided args array and the values may be accessed via the arguments object in the order specified.
 // Arguments may be any JSON-primitive, array, or JSON object. JSON objects that define a WebElement reference will be converted to the corresponding DOM element. Likewise, any WebElements in the script result will be returned to the client as WebElement JSON objects.
-func (s Session) ExecuteScript(script string, args []interface{}) ([]byte, error) {
+func (s *Session) ExecuteScript(script string, args []interface{}) ([]byte, error) {
 	p := params{"script": script, "args": args}
 	_, data, err := s.wd.do(p, "POST", "/session/%s/execute", s.Id)
 	return data, err
@@ -335,14 +335,14 @@ func (s Session) ExecuteScript(script string, args []interface{}) ([]byte, error
 // Asynchronous script commands may not span page loads. If an unload event is fired while waiting for a script result, an error should be returned to the client.
 // The script argument defines the script to execute in teh form of a function body. The function will be invoked with the provided args array and the values may be accessed via the arguments object in the order specified. The final argument will always be a callback function that must be invoked to signal that the script has finished.
 // Arguments may be any JSON-primitive, array, or JSON object. JSON objects that define a WebElement reference will be converted to the corresponding DOM element. Likewise, any WebElements in the script result will be returned to the client as WebElement JSON objects.
-func (s Session) ExecuteScriptAsync(script string, args []interface{}) ([]byte, error) {
+func (s *Session) ExecuteScriptAsync(script string, args []interface{}) ([]byte, error) {
 	p := params{"script": script, "args": args}
 	_, data, err := s.wd.do(p, "POST", "/session/%s/execute_async", s.Id)
 	return data, err
 }
 
 //Take a screenshot of the current page.
-func (s Session) Screenshoti() ([]byte, error) {
+func (s *Session) Screenshoti() ([]byte, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/screenshot", s.Id)
 	if err != nil {
 		return nil, err
@@ -353,7 +353,7 @@ func (s Session) Screenshoti() ([]byte, error) {
 }
 
 //Take a screenshot of the current page.
-func (s Session) Screenshot(filename string) error {
+func (s *Session) Screenshot(filename string) error {
 	absFilePath, err := filepath.Abs(filename)
 
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/screenshot", s.Id)
@@ -373,7 +373,7 @@ func (s Session) Screenshot(filename string) error {
 }
 
 //List all available engines on the machine.
-func (s Session) IMEAvailableEngines() ([]string, error) {
+func (s *Session) IMEAvailableEngines() ([]string, error) {
 	_, data, err := s.wd.do(nil, "GET", "session/%s/ime/available_engines", s.Id)
 	if err != nil {
 		return nil, err
@@ -384,7 +384,7 @@ func (s Session) IMEAvailableEngines() ([]string, error) {
 }
 
 //Get the name of the active IME engine.
-func (s Session) IMEActiveEngine() (string, error) {
+func (s *Session) IMEActiveEngine() (string, error) {
 	_, data, err := s.wd.do(nil, "GET", "session/%s/ime/active_engine", s.Id)
 	if err != nil {
 		return "", err
@@ -395,7 +395,7 @@ func (s Session) IMEActiveEngine() (string, error) {
 }
 
 //Indicates whether IME input is active at the moment (not if it's available).
-func (s Session) IsIMEActivated() (bool, error) {
+func (s *Session) IsIMEActivated() (bool, error) {
 	_, data, err := s.wd.do(nil, "GET", "session/%s/ime/activated", s.Id)
 	if err != nil {
 		return false, err
@@ -406,20 +406,20 @@ func (s Session) IsIMEActivated() (bool, error) {
 }
 
 //De-activates the currently-active IME engine.
-func (s Session) IMEDeactivate() error {
+func (s *Session) IMEDeactivate() error {
 	_, _, err := s.wd.do(nil, "GET", "session/%s/ime/deactivate", s.Id)
 	return err
 }
 
 //Make an engines that is available (appears on the list returned by getAvailableEngines) active.
-func (s Session) IMEActivate(engine string) error {
+func (s *Session) IMEActivate(engine string) error {
 	p := params{"engine": engine}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/ime/activate", s.Id)
 	return err
 }
 
 //Change focus to another frame on the page.
-func (s Session) FocusOnFrame(frame *WebElement) error {
+func (s *Session) FocusOnFrame(frame *WebElement) error {
 	var d interface{}
 	
 	d = params{"ELEMENT":frame.id}
@@ -431,40 +431,40 @@ func (s Session) FocusOnFrame(frame *WebElement) error {
 }
 
 // Change focus back to parent frame
-func (s Session) FocusParentFrame() error {
+func (s *Session) FocusParentFrame() error {
 	_, _, err := s.wd.do(nil, "POST", "/session/%s/frame/parent", s.Id)
 	return err
 }
 
 //Change focus to another window. The window to change focus to may be specified by its server assigned window handle, or by the value of its name attribute.
-func (s Session) FocusOnWindowo(name string) error {
+func (s *Session) FocusOnWindowo(name string) error {
 	p := params{"name": name}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/window", s.Id)
 	return err
 }
 
 
-func (s Session) FocusOnWindow(name WindowHandle) error {
+func (s *Session) FocusOnWindow(name WindowHandle) error {
 	p := params{"name": name.Id}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/window", s.Id)
 	return err
 }
 
 //Close the current window.
-func (s Session) CloseCurrentWindow() error {
+func (s *Session) CloseCurrentWindow() error {
 	_, _, err := s.wd.do(nil, "DELETE", "/session/%s/window", s.Id)
 	return err
 }
 
 //Change the size of the specified window.
-func (w WindowHandle) SetSize(size Size) error {
+func (w *WindowHandle) SetSize(size Size) error {
 	p := params{"width": size.Width, "height": size.Height}
 	_, _, err := w.S.wd.do(p, "POST", "/session/%s/window/%s/size", w.S.Id, w.Id)
 	return err
 }
 
 //Get the size of the specified window.
-func (w WindowHandle) GetSize() (Size, error) {
+func (w *WindowHandle) GetSize() (Size, error) {
 	_, data, err := w.S.wd.do(nil, "GET", "/session/%s/window/%s/size", w.S.Id, w.Id)
 	if err != nil {
 		return Size{}, err
@@ -475,14 +475,14 @@ func (w WindowHandle) GetSize() (Size, error) {
 }
 
 //Change the position of the specified window.
-func (w WindowHandle) SetPosition(position Position) error {
+func (w *WindowHandle) SetPosition(position Position) error {
 	p := params{"x": position.X, "y": position.Y}
 	_, _, err := w.S.wd.do(p, "POST", "/session/%s/window/%s/position", w.S.Id, w.Id)
 	return err
 }
 
 //Get the position of the specified window.
-func (w WindowHandle) GetPosition() (Position, error) {
+func (w *WindowHandle) GetPosition() (Position, error) {
 	_, data, err := w.S.wd.do(nil, "GET", "/session/%s/window/%s/position", w.S.Id, w.Id)
 	if err != nil {
 		return Position{}, err
@@ -493,13 +493,13 @@ func (w WindowHandle) GetPosition() (Position, error) {
 }
 
 //Maximize the specified window if not already maximized.
-func (w WindowHandle) MaximizeWindow() error {
+func (w *WindowHandle) MaximizeWindow() error {
 	_, _, err := w.S.wd.do(nil, "POST", "/session/%s/window/%s/maximize", w.S.Id, w.Id)
 	return err
 }
 
 //Retrieve all cookies visible to the current page.
-func (s Session) GetCookies() ([]Cookie, error) {
+func (s *Session) GetCookies() ([]Cookie, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/cookie", s.Id)
 	if err != nil {
 		return nil, err
@@ -510,26 +510,26 @@ func (s Session) GetCookies() ([]Cookie, error) {
 }
 
 //Set a cookie.
-func (s Session) SetCookie(cookie *Cookie) error {
+func (s *Session) SetCookie(cookie *Cookie) error {
 	p := params{"cookie": cookie}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/cookie", s.Id)
 	return err
 }
 
 //Delete all cookies visible to the current page.
-func (s Session) DeleteCookies() error {
+func (s *Session) DeleteCookies() error {
 	_, _, err := s.wd.do(nil, "DELETE", "/session/%s/cookie", s.Id)
 	return err
 }
 
 //Delete the cookie with the given name.
-func (s Session) DeleteCookieByName(name string) error {
+func (s *Session) DeleteCookieByName(name string) error {
 	_, _, err := s.wd.do(nil, "DELETE", "/session/%s/cookie/%s", s.Id, name)
 	return err
 }
 
 //Get the current page source.
-func (s Session) Source() (string, error) {
+func (s *Session) Source() (string, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/source", s.Id)
 	if err != nil {
 		return "", err
@@ -540,7 +540,7 @@ func (s Session) Source() (string, error) {
 }
 
 //Get the current page title.
-func (s Session) Title() (string, error) {
+func (s *Session) Title() (string, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/title", s.Id)
 	if err != nil {
 		return "", err
@@ -550,12 +550,12 @@ func (s Session) Title() (string, error) {
 	return title, err
 }
 
-func (s Session) WebElementFromId(id string) *WebElement {
-	return &WebElement{&s, id}
+func (s *Session) WebElementFromId(id string) *WebElement {
+	return &WebElement{s, id}
 }
 
 //Search for an element on the page, starting from the document root.
-func (s Session) FindElement(using FindElementStrategy, value string) (*WebElement, error) {
+func (s *Session) FindElement(using FindElementStrategy, value string) (*WebElement, error) {
 	p := params{"using": using, "value": value}
 	_, data, err := s.wd.do(p, "POST", "/session/%s/element", s.Id)
 	if err != nil {
@@ -566,11 +566,11 @@ func (s Session) FindElement(using FindElementStrategy, value string) (*WebEleme
 		if err != nil {
 		return nil, err
 	}
-	return &WebElement{&s, elem.ELEMENT}, nil
+	return &WebElement{s, elem.ELEMENT}, nil
 }
 
 //Search for multiple elements on the page, starting from the document root.
-func (s Session) FindElements(using FindElementStrategy, value string) ([]WebElement, error) {
+func (s *Session) FindElements(using FindElementStrategy, value string) ([]WebElement, error) {
 	p := params{"using": using, "value": value}
 	_, data, err := s.wd.do(p, "POST", "/session/%s/elements", s.Id)
 	if err != nil {
@@ -583,20 +583,20 @@ func (s Session) FindElements(using FindElementStrategy, value string) ([]WebEle
 	}
 	elements := make([]WebElement, len(v))
 	for i, elem := range v {
-		elements[i] = WebElement{&s, elem.ELEMENT}
+		elements[i] = WebElement{s, elem.ELEMENT}
 	}
 	return elements, err
 }
 
 //Get the element on the page that currently has focus.
-func (s Session) GetActiveElement() (*WebElement, error) {
+func (s *Session) GetActiveElement() (*WebElement, error) {
 	_, data, err := s.wd.do(nil, "POST", "/session/%s/element/active", s.Id)
 	if err != nil {
 		return nil, err
 	}
 	var elem element
 	err = json.Unmarshal(data, &elem)
-	return &WebElement{&s, elem.ELEMENT}, err
+	return &WebElement{s, elem.ELEMENT}, err
 }
 
 //Describe the identified element. This command is reserved for future use; its return type is currently undefined.
@@ -642,7 +642,7 @@ func (e *WebElement) SendKeys(sequence string) error {
 }
 
 //Send a sequence of key strokes to the active element.
-func (s Session) SendKeysOnActiveElement(sequence string) error {
+func (s *Session) SendKeysOnActiveElement(sequence string) error {
 	keys := make([]string, len(sequence))
 	for i, k := range sequence {
 		keys[i] = string(k)
@@ -781,7 +781,7 @@ const (
 )
 
 //Get the current browser orientation.
-func (s Session) GetOrientation() (ScreenOrientation, error) {
+func (s *Session) GetOrientation() (ScreenOrientation, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/orientation", s.Id)
 	if err != nil {
 		return "", err
@@ -792,14 +792,14 @@ func (s Session) GetOrientation() (ScreenOrientation, error) {
 }
 
 //Set the browser orientation.
-func (s Session) SetOrientation(orientation ScreenOrientation) error {
+func (s *Session) SetOrientation(orientation ScreenOrientation) error {
 	p := params{"orientation": orientation}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/orientation", s.Id)
 	return err
 }
 
 //Gets the text of the currently displayed JavaScript alert(), confirm(), or prompt() dialog.
-func (s Session) GetAlertText() (string, error) {
+func (s *Session) GetAlertText() (string, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/alert_text", s.Id)
 	if err != nil {
 		return "", err
@@ -810,27 +810,27 @@ func (s Session) GetAlertText() (string, error) {
 }
 
 //Sends keystrokes to a JavaScript prompt() dialog.
-func (s Session) SetAlertText(text string) error {
+func (s *Session) SetAlertText(text string) error {
 	p := params{"text": text}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/alert_text", s.Id)
 	return err
 }
 
 //Accepts the currently displayed alert dialog.
-func (s Session) AcceptAlert() error {
+func (s *Session) AcceptAlert() error {
 	_, _, err := s.wd.do(nil, "POST", "/session/%s/accept_alert", s.Id)
 	return err
 }
 
 //Dismisses the currently displayed alert dialog.
-func (s Session) DismissAlert() error {
+func (s *Session) DismissAlert() error {
 	_, _, err := s.wd.do(nil, "POST", "/session/%s/dismiss_alert", s.Id)
 	return err
 }
 
 //Move the mouse by an offset of the specificed element.
 //If no element is specified, the move is relative to the current mouse cursor. If an element is provided but no offset, the mouse will be moved to the center of the element. If the element is not visible, it will be scrolled into view.
-func (s Session) MoveTo(element *WebElement, xoffset, yoffset int) error {
+func (s *Session) MoveTo(element *WebElement, xoffset, yoffset int) error {
 	p := params{"element": element.id, "xoffset": xoffset, "yoffset": yoffset}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/moveto", s.Id)
 	return err
@@ -847,76 +847,76 @@ const (
 //Click any mouse button (at the coordinates set by the last moveto command).
 //
 //Note that calling this command after calling buttondown and before calling button up (or any out-of-order interactions sequence) will yield undefined behaviour).
-func (s Session) Click(button MouseButton) error {
+func (s *Session) Click(button MouseButton) error {
 	p := params{"button": button}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/click", s.Id)
 	return err
 }
 
 //Click and hold the left mouse button (at the coordinates set by the last moveto command).
-func (s Session) ButtonDown(button MouseButton) error {
+func (s *Session) ButtonDown(button MouseButton) error {
 	p := params{"button": button}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/buttondown", s.Id)
 	return err
 }
 
 //Releases the mouse button previously held (where the mouse is currently at).
-func (s Session) ButtonUp(button MouseButton) error {
+func (s *Session) ButtonUp(button MouseButton) error {
 	p := params{"button": button}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/buttonup", s.Id)
 	return err
 }
 
 //Double-clicks at the current mouse coordinates (set by moveto).
-func (s Session) DoubleClick() error {
+func (s *Session) DoubleClick() error {
 	_, _, err := s.wd.do(nil, "POST", "/session/%s/doubleclick", s.Id)
 	return err
 }
 
 //Single tap on the touch enabled device.
-func (s Session) TouchClick(element *WebElement) error {
+func (s *Session) TouchClick(element *WebElement) error {
 	p := params{"element": element.id}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/click", s.Id)
 	return err
 }
 
 //Finger down on the screen.
-func (s Session) TouchDown(x, y int) error {
+func (s *Session) TouchDown(x, y int) error {
 	p := params{"x": x, "y": y}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/down", s.Id)
 	return err
 }
 
 //Finger up on the screen.
-func (s Session) TouchUp(x, y int) error {
+func (s *Session) TouchUp(x, y int) error {
 	p := params{"x": x, "y": y}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/up", s.Id)
 	return err
 }
 
 //Finger move on the screen.
-func (s Session) TouchMove(x, y int) error {
+func (s *Session) TouchMove(x, y int) error {
 	p := params{"x": x, "y": y}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/move", s.Id)
 	return err
 }
 
 //Scroll on the touch screen using finger based motion events.
-func (s Session) TouchScroll(element *WebElement, xoffset, yoffset int) error {
+func (s *Session) TouchScroll(element *WebElement, xoffset, yoffset int) error {
 	p := params{"element": element.id, "xoffset": xoffset, "yoffset": yoffset}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/scroll", s.Id)
 	return err
 }
 
 //Double tap on the touch screen using finger motion events.
-func (s Session) TouchDoubleClick(element *WebElement) error {
+func (s *Session) TouchDoubleClick(element *WebElement) error {
 	p := params{"element": element.id}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/doubleclick", s.Id)
 	return err
 }
 
 //Long press on the touch screen using finger motion events.
-func (s Session) TouchLongClick(element *WebElement) error {
+func (s *Session) TouchLongClick(element *WebElement) error {
 	p := params{"element": element.id}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/longclick", s.Id)
 	return err
@@ -924,7 +924,7 @@ func (s Session) TouchLongClick(element *WebElement) error {
 
 //Flick on the touch screen using finger motion events.
 //This flickcommand starts at a particulat screen location.
-func (s Session) TouchFlick(element *WebElement, xoffset, yoffset, speed int) error {
+func (s *Session) TouchFlick(element *WebElement, xoffset, yoffset, speed int) error {
 	p := params{"element": element.id, "xoffset": xoffset, "yoffset": yoffset, "speed": speed}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/flick", s.Id)
 	return err
@@ -932,14 +932,14 @@ func (s Session) TouchFlick(element *WebElement, xoffset, yoffset, speed int) er
 
 //Flick on the touch screen using finger motion events.
 //Use this flick command if you don't care where the flick starts on the screen.
-func (s Session) TouchFlickAnywhere(xspeed, yspeed int) error {
+func (s *Session) TouchFlickAnywhere(xspeed, yspeed int) error {
 	p := params{"xspeed": xspeed, "yspeed": yspeed}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/touch/flick", s.Id)
 	return err
 }
 
 //Get the current geo location.
-func (s Session) GetGeoLocation() (GeoLocation, error) {
+func (s *Session) GetGeoLocation() (GeoLocation, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/location", s.Id)
 	if err != nil {
 		return GeoLocation{}, err
@@ -950,14 +950,14 @@ func (s Session) GetGeoLocation() (GeoLocation, error) {
 }
 
 //Set the current geo location.
-func (s Session) SetGeoLocation(location GeoLocation) error {
+func (s *Session) SetGeoLocation(location GeoLocation) error {
 	p := params{"location": location}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/location", s.Id)
 	return err
 }
 
 //helper functions, storageType can be "local_storage" or "session_storage"
-func (s Session) storageGetKeys(storageType string) ([]string, error) {
+func (s *Session) storageGetKeys(storageType string) ([]string, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/%s", s.Id, storageType)
 	if err != nil {
 		return nil, err
@@ -967,19 +967,19 @@ func (s Session) storageGetKeys(storageType string) ([]string, error) {
 	return keys, err
 }
 
-func (s Session) storageSetKey(storageType, key, value string) error {
+func (s *Session) storageSetKey(storageType, key, value string) error {
 	p := params{"key": key, "value": value}
 	_, _, err := s.wd.do(p, "POST", "/session/%s/%s", s.Id, storageType)
 	return err
 }
 
-func (s Session) storageClear(storageType string) error {
+func (s *Session) storageClear(storageType string) error {
 	_, _, err := s.wd.do(nil, "DELETE", "/session/%s/%s", s.Id, storageType)
 	return err
 }
 
 //TODO protocol specification doesn't specify what is returned, I guess a string
-func (s Session) storageGetKey(storageType, key string) (string, error) {
+func (s *Session) storageGetKey(storageType, key string) (string, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/%s/key/%s", s.Id, storageType, key)
 	if err != nil {
 		return "", err
@@ -989,13 +989,13 @@ func (s Session) storageGetKey(storageType, key string) (string, error) {
 	return value, err
 }
 
-func (s Session) storageRemoveKey(storageType string, key string) error {
+func (s *Session) storageRemoveKey(storageType string, key string) error {
 	_, _, err := s.wd.do(nil, "DELETE", "/session/%s/%s/key/%s", s.Id, storageType, key)
 	return err
 }
 
 //Get the number of items in the storage.
-func (s Session) storageSize(storageType string) (int, error) {
+func (s *Session) storageSize(storageType string) (int, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/%s/size", s.Id, storageType)
 	if err != nil {
 		return -1, err
@@ -1006,67 +1006,67 @@ func (s Session) storageSize(storageType string) (int, error) {
 }
 
 //Get all keys of the storage.
-func (s Session) LocalStorageGetKeys() ([]string, error) {
+func (s *Session) LocalStorageGetKeys() ([]string, error) {
 	return s.storageGetKeys("local_storage")
 }
 
 //Set the storage item for the given key.
-func (s Session) LocalStorageSetKey(key, value string) error {
+func (s *Session) LocalStorageSetKey(key, value string) error {
 	return s.storageSetKey("local_storage", key, value)
 }
 
 //Clear the storage.
-func (s Session) LocalStorageClear() error {
+func (s *Session) LocalStorageClear() error {
 	return s.storageClear("local_storage")
 }
 
 //Get the storage item for the given key.
-func (s Session) LocalStorageGetKey(key string) (string, error) {
+func (s *Session) LocalStorageGetKey(key string) (string, error) {
 	return s.storageGetKey("local_storage", key)
 }
 
 //Remove the storage item for the given key.
-func (s Session) LocalStorageRemoveKey(key string) error {
+func (s *Session) LocalStorageRemoveKey(key string) error {
 	return s.storageRemoveKey("local_storage", key)
 }
 
 //Get the number of items in the storage.
-func (s Session) LocalStorageSize() (int, error) {
+func (s *Session) LocalStorageSize() (int, error) {
 	return s.storageSize("local_storage")
 }
 
 //Get all keys of the storage.
-func (s Session) SessionStorageGetKeys() ([]string, error) {
+func (s *Session) SessionStorageGetKeys() ([]string, error) {
 	return s.storageGetKeys("session_storage")
 }
 
 //Set the storage item for the given key.
-func (s Session) SessionStorageSetKey(key, value string) error {
+func (s *Session) SessionStorageSetKey(key, value string) error {
 	return s.storageSetKey("session_storage", key, value)
 }
 
 //Clear the storage.
-func (s Session) SessionStorageClear() error {
+func (s *Session) SessionStorageClear() error {
 	return s.storageClear("session_storage")
 }
 
 //Get the storage item for the given key.
-func (s Session) SessionStorageGetKey(key string) (string, error) {
+func (s *Session) SessionStorageGetKey(key string) (string, error) {
 	return s.storageGetKey("session_storage", key)
 }
 
 //Remove the storage item for the given key.
-func (s Session) SessionStorageRemoveKey(key string) error {
+func (s *Session) SessionStorageRemoveKey(key string) error {
 	return s.storageRemoveKey("session_storage", key)
 }
 
 //Get the number of items in the storage.
-func (s Session) SessionStorageSize() (int, error) {
+func (s *Session) SessionStorageSize() (int, error) {
 	return s.storageSize("session_storage")
 }
 
 //Get the log for a given log type.
-func (s Session) Log(logType string) ([]LogEntry, error) {
+func (s *Session) Log(logType string) ([]LogEntry, error) {
 	p := params{"type": logType}
 	_, data, err := s.wd.do(p, "POST", "/session/%s/log", s.Id)
 	if err != nil {
@@ -1078,7 +1078,7 @@ func (s Session) Log(logType string) ([]LogEntry, error) {
 }
 
 //Get available log types.
-func (s Session) LogTypes() ([]string, error) {
+func (s *Session) LogTypes() ([]string, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/log/types", s.Id)
 	if err != nil {
 		return nil, err
@@ -1089,7 +1089,7 @@ func (s Session) LogTypes() ([]string, error) {
 }
 
 //Get the status of the html5 application cache.
-func (s Session) GetHTML5CacheStatus() (HTML5CacheStatus, error) {
+func (s *Session) GetHTML5CacheStatus() (HTML5CacheStatus, error) {
 	_, data, err := s.wd.do(nil, "GET", "/session/%s/application_cache/status", s.Id)
 	if err != nil {
 		return 0, err
